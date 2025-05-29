@@ -7,9 +7,9 @@
 
 
 #define MAX_LOADSTRING 1000
-#define PADDLE_WIDTH 30
+#define PADDLE_WIDTH 10
 #define PADDLE_HEIGHT 150
-#define BALL_SIZE 10
+#define BALL_SIZE 20
 #define PADDLE_SPEED 30
 
 // Глобальные переменные:
@@ -125,7 +125,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     UpdateWindow(hWnd);
 
     // Установка таймера для обновления игры
-    SetTimer(hWnd, 1, 0.01, NULL); // ~60 FPS
+    SetTimer(hWnd, 1, 1, NULL); // ~60 FPS
 
     return TRUE;
 }
@@ -260,12 +260,12 @@ void DrawGame(HDC hdc, HWND hWnd)
     GetClientRect(hWnd, &clientRect);
 
     // Очистка экрана
-    HBRUSH hBrush = CreateSolidBrush(RGB(70,70,70));
+    HBRUSH hBrush = CreateSolidBrush(RGB(0,0,0));
     FillRect(hdc, &clientRect, hBrush);
     DeleteObject(hBrush);
 
     // Рисуем разделительную линию
-    HPEN hPen = CreatePen(PS_SOLID, 1, RGB(1, 1, 1));
+    HPEN hPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
     HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
 
     for (int y = 0; y < clientRect.bottom; y += 20)
@@ -278,13 +278,13 @@ void DrawGame(HDC hdc, HWND hWnd)
     DeleteObject(hPen);
 
     // Рисуем ракетки
-    hBrush = CreateSolidBrush(RGB(150, 0, 150));
+    hBrush = CreateSolidBrush(RGB(255, 255, 255));
     FillRect(hdc, &paddleLeft, hBrush);
     FillRect(hdc, &paddleRight, hBrush);
     DeleteObject(hBrush);
 
     // Рисуем мяч
-    hBrush = CreateSolidBrush(RGB(0,255,0));
+    hBrush = CreateSolidBrush(RGB(255,255,255));
     FillRect(hdc, &ball, hBrush);
     DeleteObject(hBrush);
 
