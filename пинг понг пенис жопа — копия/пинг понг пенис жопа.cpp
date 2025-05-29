@@ -4,6 +4,7 @@
 #include "framework.h"
 #include "Resource.h"
 #include <conio.h>
+#include <mciapi.h>
 
 
 #define MAX_LOADSTRING 1000
@@ -12,6 +13,7 @@
 #define BALL_SIZE 10
 #define PADDLE_SPEED 30
 
+  
 // Глобальные переменные:
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
@@ -28,7 +30,7 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-void                UpdateGame(HWND hWnd);
+void                UpdateGame(HWND hWnd  );
 void                DrawGame(HDC hdc, HWND hWnd);
 void                ResetBall(HWND hWnd);
 
@@ -131,7 +133,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 }
 
 
-
+void RestartGame(HWND hWnd) {
+    player1Score = 0;
+    player2Score = 0;
+    ResetBall(hWnd);
+    gamePaused = true;
+    InvalidateRect(hWnd, NULL, TRUE); // Перерисовать окно
+}
 
 void ResetBall(HWND hWnd)
 {
@@ -225,29 +233,7 @@ void UpdateGame(HWND hWnd)
     // _getch() ожидает нажатия клавиши без необходимости нажимать Enter
     int key = _getch();
 
-    // Проверяем, что нажата 'ё' (код 184 в Windows для русской раскладки)
-    if (key == 184) {
-        RECT clientRect;
-        GetClientRect(hWnd, &clientRect);
 
-        int paddleY = (clientRect.bottom - clientRect.top - PADDLE_HEIGHT) / 2;
-
-        paddleLeft.left = 20;
-        paddleLeft.top = paddleY;
-        paddleLeft.right = paddleLeft.left + PADDLE_WIDTH;
-        paddleLeft.bottom = paddleLeft.top + PADDLE_HEIGHT;
-
-        paddleRight.right = clientRect.right - 20;
-        paddleRight.left = paddleRight.right - PADDLE_WIDTH;
-        paddleRight.top = paddleY;
-        paddleRight.bottom = paddleRight.top + PADDLE_HEIGHT;
-
-        ResetBall(hWnd);
-
-    
-        UpdateWindow(hWnd);
-        // Здесь можно добавить нужную логику
-    }
 
 
 
@@ -310,15 +296,11 @@ void DrawGame(HDC hdc, HWND hWnd)
     }
 }
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message)
-    {
-    case WM_COMMAND:
-    {
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    switch (message) {
+    case WM_COMMAND: {
         int wmId = LOWORD(wParam);
-        switch (wmId)
-        {
+        switch (wmId) {
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
@@ -329,15 +311,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
     }
-    break;
+                   break;
 
-    case WM_KEYDOWN:
-    {
+    case WM_KEYDOWN: {
         RECT clientRect;
         GetClientRect(hWnd, &clientRect);
 
-        switch (wParam)
-        {
+        switch (wParam) {
         case VK_SPACE:
             gamePaused = !gamePaused;
             InvalidateRect(hWnd, NULL, FALSE);
@@ -345,16 +325,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             // Управление левой ракеткой (W/S)
         case 'W':
-            if (paddleLeft.top > clientRect.top)
-            {
+            if (paddleLeft.top > clientRect.top) {
                 paddleLeft.top -= PADDLE_SPEED;
                 paddleLeft.bottom -= PADDLE_SPEED;
                 InvalidateRect(hWnd, NULL, FALSE);
             }
             break;
         case 'S':
-            if (paddleLeft.bottom < clientRect.bottom)
-            {
+            if (paddleLeft.bottom < clientRect.bottom) {
                 paddleLeft.top += PADDLE_SPEED;
                 paddleLeft.bottom += PADDLE_SPEED;
                 InvalidateRect(hWnd, NULL, FALSE);
@@ -363,37 +341,42 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             // Управление правой ракеткой (стрелки вверх/вниз)
         case VK_UP:
-            if (paddleRight.top > clientRect.top)
-            {
+            if (paddleRight.top > clientRect.top) {
                 paddleRight.top -= PADDLE_SPEED;
                 paddleRight.bottom -= PADDLE_SPEED;
                 InvalidateRect(hWnd, NULL, FALSE);
             }
             break;
         case VK_DOWN:
-            if (paddleRight.bottom < clientRect.bottom)
-            {
+            if (paddleRight.bottom < clientRect.bottom) {
                 paddleRight.top += PADDLE_SPEED;
                 paddleRight.bottom += PADDLE_SPEED;
                 InvalidateRect(hWnd, NULL, FALSE);
             }
             break;
+        case 'R':
+            RestartGame(hWnd);
         }
     }
-    break;
+                   break;
+
+    case WM_CHAR:
+        if (wParam == 'ё' || wParam == 192) { // Проверка на 'ё' (код 192 в Win1251)
+            RestartGame(hWnd);
+        }
+        break;
 
     case WM_TIMER:
         UpdateGame(hWnd);
         break;
 
-    case WM_PAINT:
-    {
+    case WM_PAINT: {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         DrawGame(hdc, hWnd);
         EndPaint(hWnd, &ps);
     }
-    break;
+                 break;
 
     case WM_DESTROY:
         KillTimer(hWnd, 1);
